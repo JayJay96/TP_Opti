@@ -1,10 +1,11 @@
-public class Warehouse {
-    private Integer id;
+public class Warehouse extends Customer{
+        private Integer id;
 
     private Integer x;
     private Integer y;
 
     public Warehouse(Integer id, Integer x, Integer y) {
+        super(id, x, y, 0);
         this.id = id;
         this.x = x;
         this.y = y;

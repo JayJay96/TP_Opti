@@ -1,11 +1,12 @@
 import javafx.util.Pair;
 
 import java.util.LinkedList;
+import java.util.List;
 
-public class Circuit {
+public class Circuit implements Cloneable{
     private LinkedList<Customer> customers;
     private Integer quantity;
-    private Integer fitness;
+    private Double fitness;
 
     @Override
     public String toString() {
@@ -21,6 +22,8 @@ public class Circuit {
     public Circuit(LinkedList<Customer> customers) {
         this.customers = customers;
         this.quantity = 0;
+        for(Customer c : customers)
+            this.quantity += c.getQuantities();
     }
 
     public LinkedList<Customer> getCustomers() {
@@ -31,11 +34,11 @@ public class Circuit {
         this.customers = customers;
     }
 
-    public Integer getFitness() {
+    public Double getFitness() {
         return fitness;
     }
 
-    public void setFitness(Integer fitness) {
+    public void setFitness(Double fitness) {
         this.fitness = fitness;
     }
 
@@ -61,5 +64,20 @@ public class Circuit {
             Y += c.getY();
         }
         return new Customer(0, X/customers.size(), Y/customers.size(), 0);
+    }
+
+    public Double computeFitness(){
+        Double fitness = 0d;
+        for(int i = 0; i < customers.size()-1; ++i){
+            fitness += customers.get(i).getEuclidianDistance(customers.get(i+1));
+        }
+        fitness += customers.getLast().getEuclidianDistance(customers.getFirst());
+        return fitness;
+    }
+
+    public Circuit clone() throws CloneNotSupportedException {
+        Circuit c = (Circuit)super.clone();
+        c.customers = (LinkedList<Customer>)customers.clone();
+        return c;
     }
 }

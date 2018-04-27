@@ -23,7 +23,7 @@ public class Controller {
 
     public Controller(){}
 
-    public void run() {
+    private void run() {
         try {
             initValue("./data01.txt");
             initCircuit();
@@ -34,7 +34,7 @@ public class Controller {
         }
     }
 
-    public List<Circuit> getOptimizedNeighbor(List<Circuit> circuits, Double fitness) throws Exception{
+    private List<Circuit> getOptimizedNeighbor(List<Circuit> circuits, Double fitness) throws Exception{
         List<Circuit> cloneCircuit;
         List<Circuit> optimizedNeighbor = null;
         Double optimizedFitness = fitness;
@@ -61,14 +61,13 @@ public class Controller {
                 }
             }
         }
-        if(fitness == optimizedFitness) throw new Exception("Valeur optimisée");
-        fitness = optimizedFitness;
+        if(fitness.equals(optimizedFitness)) throw new Exception("Valeur optimisée");
         return optimizedNeighbor;
     }
 
-    public List<Circuit> cloneList(List<Circuit> list) {
+    private List<Circuit> cloneList(List<Circuit> list) {
         try{
-            List<Circuit> clone = new ArrayList<Circuit>(list.size());
+            List<Circuit> clone = new ArrayList<>(list.size());
             for (Circuit item : list) clone.add(item.clone());
             return clone;
         }catch (Exception e){
@@ -77,7 +76,7 @@ public class Controller {
         }
     }
 
-    public static Double getTotalFitness(List<Circuit> circuits){
+    private static Double getTotalFitness(List<Circuit> circuits){
         Double fitnessTotal = 0d;
         for(Circuit c : circuits) {
             c.setFitness(c.computeFitness());
@@ -124,7 +123,7 @@ public class Controller {
         LinkedList<Customer> customers;
         Customer customer;
         Random r = new Random();
-        Integer index = 0;
+        Integer index;
 
         //Init all circuit with one customer selected randomly
         for(int i = 0; i < nbTrucks; ++i){
@@ -139,7 +138,7 @@ public class Controller {
         }
 
         Double minDistance = null;
-        Double distance = null;
+        Double distance;
         Integer selectedCircuit = null;
         Circuit circuit1;
         for(Customer c : allCustomers){

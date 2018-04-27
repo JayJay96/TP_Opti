@@ -93,13 +93,11 @@ public class View extends Application{
         launch(args);
     }
 
-    public static void initData(Controller controller, Group root, String fileName){
+    private static void initData(Controller controller, Group root, String fileName){
         controller.initValue(fileName);
         List<Customer> customers = controller.getAllCustomers();
         root.getChildren().removeAll(addedNodes);
         addedNodes.clear();
-        Circle customer;
-        Text text;
         for(Customer c : customers){
             createCustomer(c, c.getId().toString(), Color.BLUE);
         }
@@ -108,7 +106,7 @@ public class View extends Application{
         root.getChildren().addAll(addedNodes);
     }
 
-    public static void createCustomer(Customer customer, String title, Color color){
+    private static void createCustomer(Customer customer, String title, Color color){
         Circle customerCicle;
         Text text;
         customerCicle = new Circle(customer.getX()*multiplicatorValue + centerValue,
@@ -126,7 +124,7 @@ public class View extends Application{
         addedNodes.add(text);
     }
 
-    public static void createAllCircuit(List<Circuit> circuits, Customer warehouse){
+    private static void createAllCircuit(List<Circuit> circuits, Customer warehouse){
         Color color;
         Customer customer;
 
@@ -147,7 +145,7 @@ public class View extends Application{
         createCustomer(warehouse, "Entrepôt", Color.RED);
     }
 
-    public static void createLine(Customer from, Customer to, Color color){
+    private static void createLine(Customer from, Customer to, Color color){
         Line line = new Line();
         line.setFill(color.deriveColor(1, 1, 1, 0.5));
         line.setStroke(color);

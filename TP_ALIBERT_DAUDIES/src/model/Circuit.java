@@ -9,13 +9,16 @@ public class Circuit implements Cloneable{
 
     @Override
     public String toString() {
-        String toString = "model.Circuit{" + "customers={";
+        StringBuilder sb = new StringBuilder();
+        sb.append("Circuit{" + "customers={");
         for(Customer c : customers)
-            toString += c;
-        toString += "}, quantity=" + quantity +
-                ", fitness=" + fitness +
-                '}';
-        return toString;
+            sb.append(c);
+        sb.append("}, quantity=")
+            .append(quantity)
+            .append(", fitness=")
+            .append(fitness)
+            .append('}');
+        return sb.toString();
     }
 
     public Circuit(LinkedList<Customer> customers) {
@@ -27,14 +30,6 @@ public class Circuit implements Cloneable{
 
     public LinkedList<Customer> getCustomers() {
         return customers;
-    }
-
-    public void setCustomers(LinkedList<Customer> customers) {
-        this.customers = customers;
-    }
-
-    public Double getFitness() {
-        return fitness;
     }
 
     public void setFitness(Double fitness) {

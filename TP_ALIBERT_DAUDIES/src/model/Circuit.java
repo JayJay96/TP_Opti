@@ -1,7 +1,6 @@
-import javafx.util.Pair;
+package model;
 
 import java.util.LinkedList;
-import java.util.List;
 
 public class Circuit implements Cloneable{
     private LinkedList<Customer> customers;
@@ -10,7 +9,7 @@ public class Circuit implements Cloneable{
 
     @Override
     public String toString() {
-        String toString = "Circuit{" + "customers={";
+        String toString = "model.Circuit{" + "customers={";
         for(Customer c : customers)
             toString += c;
         toString += "}, quantity=" + quantity +
@@ -40,6 +39,11 @@ public class Circuit implements Cloneable{
 
     public void setFitness(Double fitness) {
         this.fitness = fitness;
+    }
+
+    public void addCustomerAt(Customer c, Integer index){
+        quantity += c.getQuantities();
+        customers.add(index, c);
     }
 
     public void addCustomer(Customer c){

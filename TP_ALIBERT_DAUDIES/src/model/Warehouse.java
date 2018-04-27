@@ -1,4 +1,8 @@
-public class Warehouse extends Customer{
+package model;
+
+import model.Customer;
+
+public class Warehouse extends Customer {
         private Integer id;
 
     private Integer x;

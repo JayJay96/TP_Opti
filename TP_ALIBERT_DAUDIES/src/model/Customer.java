@@ -1,3 +1,5 @@
+package model;
+
 public class Customer implements Cloneable{
     private Integer id;
 
@@ -51,7 +53,7 @@ public class Customer implements Cloneable{
 
     @Override
     public String toString() {
-        return "Customer{" +
+        return "model.Customer{" +
                 "id=" + id +
                 ", x=" + x +
                 ", y=" + y +

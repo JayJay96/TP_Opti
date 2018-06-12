@@ -8,10 +8,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class Controller {
     private List<Circuit> allCircuits;
@@ -20,6 +17,10 @@ public class Controller {
     private Customer warehouse;
     private Integer nbTrucks;
     private Integer allQuantities;
+    private LinkedList<List<Circuit>> tabouList;
+    private Map<List<Circuit>, Double> allNeighbor;
+    private Integer tabouListSize;
+    private Integer nbMaxIteration;
 
     public Controller(){}
 
@@ -41,6 +42,7 @@ public class Controller {
         Double optimizedFitness = null;
         Circuit circuit;
         Double calculatedFitness;
+        Integer customerIndex;
         for(int i = 0; i < circuits.size(); ++i){
             circuit = circuits.get(i);
             for(Customer customer : circuit.getCustomers()){
@@ -48,6 +50,7 @@ public class Controller {
                     continue;
                 }
                 cloneCircuit = cloneList(circuits);
+                customerIndex = cloneCircuit.get(i).getCustomers().indexOf(customer);
                 cloneCircuit.get(i).removeCustomer(customer);
                 for(Circuit clonedCircuit : cloneCircuit){
                     for(int j = 1; j < clonedCircuit.getCustomers().size(); ++j){
@@ -62,10 +65,59 @@ public class Controller {
                         }
                     }
                 }
+                cloneCircuit.get(i).addCustomerAt(customer, customerIndex);
             }
         }
         if(fitness.equals(optimizedFitness)) throw new Exception("Valeur optimisée");
         return optimizedNeighbor;
+    }
+
+    private List<Circuit> tabouMethod(List<Circuit> circuits, Double fitness) throws Exception{
+        allNeighbor = new HashMap<>();
+        List<Circuit> cloneCircuit;
+        List<Circuit> optimizedNeighbor = null;
+        Double optimizedFitness = null;
+        Circuit circuit;
+        Double calculatedFitness;
+        Integer customerIndex;
+        for(int i = 0; i < circuits.size(); ++i){
+            circuit = circuits.get(i);
+            for(Customer customer : circuit.getCustomers()){
+                if(customer instanceof Warehouse){
+                    continue;
+                }
+                cloneCircuit = cloneList(circuits);
+                customerIndex = cloneCircuit.get(i).getCustomers().indexOf(customer);
+                cloneCircuit.get(i).removeCustomer(customer);
+                for(Circuit clonedCircuit : cloneCircuit){
+                    for(int j = 1; j < clonedCircuit.getCustomers().size(); ++j){
+                        if(clonedCircuit.getQuantity() + customer.getQuantities() <= 100) {
+                            clonedCircuit.addCustomerAt(customer, j);
+                            List<Circuit> keyCircuit = cloneList(cloneCircuit);
+                            calculatedFitness = getTotalFitness(keyCircuit);
+                            allNeighbor.put(keyCircuit, calculatedFitness);
+                            clonedCircuit.removeCustomer(customer);
+                        }
+                    }
+                }
+                cloneCircuit.get(i).addCustomerAt(customer, customerIndex);
+            }
+        }
+        Map.Entry<List<Circuit>, Double> min;
+        min = Collections.min(allNeighbor.entrySet(), Comparator.comparing(Map.Entry::getValue));
+        while (tabouList.contains(min.getKey())){
+            allNeighbor.remove(min.getKey());
+            if(allNeighbor.size() == 0) return null;
+            min = Collections.min(allNeighbor.entrySet(), Comparator.comparing(Map.Entry::getValue));
+        }
+
+        if(min.getValue() > fitness) {
+            if (tabouList.size() == tabouListSize)
+                tabouList.removeLast();
+            if (!tabouList.contains(min.getKey()))
+                tabouList.addFirst(min.getKey());
+        }
+        return min.getKey();
     }
 
     private List<Circuit> cloneList(List<Circuit> list) {
@@ -191,8 +243,9 @@ public class Controller {
 
     public void searchOptimizedNeighbor(){
         List<Circuit> c1 = allCircuits;
+        System.out.println("Nombre de client : "  + allCustomers.size());
         try {
-            for (int i = 0; i < 20; ++i) {
+            for (int i = 0; i < 50; ++i) {
                 c1 = getOptimizedNeighbor(c1, getTotalFitness(c1));
             }
             System.out.println(c1);
@@ -201,6 +254,36 @@ public class Controller {
             System.out.println(c1);
             System.out.println(getTotalFitness(c1));
         }
+
+        Integer countClient = 0;
+        for(int i = 0; i < c1.size(); ++i){
+            countClient += c1.get(i).getCustomers().size() - 2;
+        }
+        System.out.println("Nombre de client après optimissation : " + countClient);
+        optimizedCircuit = c1;
+    }
+
+    public void tabou(){
+        tabouList = new LinkedList<>();
+        List<Circuit> c1 = allCircuits;
+        System.out.println("Nombre de client : "  + allCustomers.size());
+        try {
+            for (int i = 0; i < nbMaxIteration; ++i) {
+                c1 = tabouMethod(c1, getTotalFitness(c1));
+            }
+            System.out.println(c1);
+            System.out.println(getTotalFitness(c1));
+        }catch (Exception e){
+            e.printStackTrace();
+            System.out.println(c1);
+            System.out.println(getTotalFitness(c1));
+        }
+
+        Integer countClient = 0;
+        for(int i = 0; i < c1.size(); ++i){
+            countClient += c1.get(i).getCustomers().size() - 2;
+        }
+        System.out.println("Nombre de client après optimissation : " + countClient);
         optimizedCircuit = c1;
     }
 
@@ -231,5 +314,13 @@ public class Controller {
 
     public List<Circuit> getOptimizedCircuit() {
         return optimizedCircuit;
+    }
+
+    public void setTabouListSize(Integer tabouListSize) {
+        this.tabouListSize = tabouListSize;
+    }
+
+    public void setNbMaxIteration(Integer nbMaxIteration) {
+        this.nbMaxIteration = nbMaxIteration;
     }
 }

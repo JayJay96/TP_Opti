@@ -5,7 +5,10 @@ import javafx.application.Application;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
@@ -24,6 +27,8 @@ public class View extends Application{
     private static Integer multiplicatorValue = 5;
     private static Integer centerValue = 50;
     private static List<Node> addedNodes;
+    private static TextField tabouSize;
+    private static TextField tabouIterationValue;
 
     @Override
     public void start(Stage stage) {
@@ -70,13 +75,42 @@ public class View extends Application{
         Button buttonCompute = new Button("Compute");
         buttonCompute.setLayoutX(375);
         buttonCompute.setOnAction(actionEvent -> {
-            controller.searchOptimizedNeighbor();
+            Integer tabouListSize;
+            Integer tabouIteration;
+            try{
+                tabouListSize = Integer.parseInt(tabouSize.getText());
+                tabouIteration = Integer.parseInt(tabouIterationValue.getText());
+            }catch (Exception e){
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Donnée invalide");
+                alert.setHeaderText("Erreur de parsing");
+                alert.setContentText("La taille de la liste tabou doit être un nombre");
+                alert.showAndWait();
+                return;
+            }
+            controller.setNbMaxIteration(tabouIteration);
+            controller.setTabouListSize(tabouListSize);
+            //controller.searchOptimizedNeighbor();
+            controller.tabou();
             root.getChildren().removeAll(addedNodes);
             addedNodes.clear();
             createAllCircuit(controller.getOptimizedCircuit(), controller.getWarehouse());
             root.getChildren().addAll(addedNodes);
         });
         root.getChildren().addAll(buttonCompute);
+        Label tabouList = new Label("Taille liste tabou : ");
+        tabouList.setLayoutX(475);
+        tabouSize = new TextField();
+        tabouSize.setLayoutX(600);
+        tabouSize.setMaxWidth(40);
+        root.getChildren().addAll(tabouSize, tabouList);
+
+        Label tabouIteration = new Label("Itération max tabou : ");
+        tabouIteration.setLayoutX(650);
+        tabouIterationValue = new TextField();
+        tabouIterationValue.setLayoutX(800);
+        tabouIterationValue.setMaxWidth(50);
+        root.getChildren().addAll(tabouIteration, tabouIterationValue);
 
         Scene scene = new Scene(root, 900, 600);
 

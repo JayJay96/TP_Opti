@@ -79,4 +79,24 @@ public class Circuit implements Cloneable{
         c.customers = (LinkedList<Customer>)customers.clone();
         return c;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Circuit circuit = (Circuit) o;
+
+        if (customers != null ? !customers.equals(circuit.customers) : circuit.customers != null) return false;
+        if (quantity != null ? !quantity.equals(circuit.quantity) : circuit.quantity != null) return false;
+        return fitness != null ? fitness.equals(circuit.fitness) : circuit.fitness == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = customers != null ? customers.hashCode() : 0;
+        result = 31 * result + (quantity != null ? quantity.hashCode() : 0);
+        result = 31 * result + (fitness != null ? fitness.hashCode() : 0);
+        return result;
+    }
 }

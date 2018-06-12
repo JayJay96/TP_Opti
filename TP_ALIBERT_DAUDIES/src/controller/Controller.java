@@ -27,6 +27,7 @@ public class Controller {
         try {
             initValue("./data01.txt");
             initCircuit();
+            searchOptimizedNeighbor();
 
 
         }catch (Exception e){
@@ -37,8 +38,9 @@ public class Controller {
     private List<Circuit> getOptimizedNeighbor(List<Circuit> circuits, Double fitness) throws Exception{
         List<Circuit> cloneCircuit;
         List<Circuit> optimizedNeighbor = null;
-        Double optimizedFitness = fitness;
+        Double optimizedFitness = null;
         Circuit circuit;
+        Double calculatedFitness;
         for(int i = 0; i < circuits.size(); ++i){
             circuit = circuits.get(i);
             for(Customer customer : circuit.getCustomers()){
@@ -49,10 +51,11 @@ public class Controller {
                 cloneCircuit.get(i).removeCustomer(customer);
                 for(Circuit clonedCircuit : cloneCircuit){
                     for(int j = 1; j < clonedCircuit.getCustomers().size(); ++j){
-                        if(clonedCircuit.getQuantity() + customer.getQuantities() > 100) {
+                        if(clonedCircuit.getQuantity() + customer.getQuantities() <= 100) {
                             clonedCircuit.addCustomerAt(customer, j);
-                            if (optimizedFitness > getTotalFitness(cloneCircuit)) {
-                                optimizedFitness = getTotalFitness(cloneCircuit);
+                            calculatedFitness = getTotalFitness(cloneCircuit);
+                            if (optimizedFitness == null || optimizedFitness > calculatedFitness) {
+                                optimizedFitness = calculatedFitness;
                                 optimizedNeighbor = cloneCircuit;
                             }
                             clonedCircuit.removeCustomer(customer);

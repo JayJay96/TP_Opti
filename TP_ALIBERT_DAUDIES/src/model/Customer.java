@@ -48,4 +48,19 @@ public class Customer implements Cloneable{
     public Customer clone() throws CloneNotSupportedException {
         return (Customer)super.clone();
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Customer customer = (Customer) o;
+
+        return id.equals(customer.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
 }

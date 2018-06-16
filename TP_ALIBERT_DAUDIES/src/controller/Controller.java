@@ -24,6 +24,7 @@ public class Controller {
     private Map<List<Circuit>, Double> allNeighbor;
     private Integer tabouListSize;
     private Integer nbMaxIteration;
+    private String fileName;
 
     public Controller() {
     }
@@ -73,7 +74,7 @@ public class Controller {
             }
         }
         if (fitness.equals(optimizedFitness)) {
-            throw new Exception("Valeur optimisée");
+            throw new Exception("Valeur optimisÃ©e");
         }
         return optimizedNeighbor;
     }
@@ -152,9 +153,11 @@ public class Controller {
         return fitnessTotal;
     }
 
-    public void initValue(String fileName) {
-        try {
+    public void initValue(String fileName){
+        try{
+            this.fileName = fileName;
             allCustomers = new ArrayList<>();
+            optimizedCircuit = new ArrayList<>();
             File f = new File(fileName);
             InputStreamReader isr = new InputStreamReader(new FileInputStream(f));
             BufferedReader reader = new BufferedReader(isr);
@@ -180,13 +183,14 @@ public class Controller {
                 s = reader.readLine();
             }
             nbTrucks = (allQuantities / 100 + 1);
-            System.out.println("Nombre minimum de camion avec une capacité de 100 : " + nbTrucks);
+            System.out.println("Nombre minimum de camion avec une capacitÃ© de 100 : " + nbTrucks);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     public void initCircuit() {
+        initValue(fileName);
         allCircuits = new ArrayList<>();
         Circuit circuit;
         LinkedList<Customer> customers;
@@ -251,7 +255,7 @@ public class Controller {
             System.out.println(c.getQuantity() + " " + c);
         }
         System.out.println("Fitness total : " + fitnessTotal);
-        System.out.println("Quantité totale : " + allQuantities);
+        System.out.println("QuantitÃ© totale : " + allQuantities);
     }
 
     public void searchOptimizedNeighbor() {
@@ -276,29 +280,30 @@ public class Controller {
         optimizedCircuit = c1;
     }
 
-    public void tabou() {
+    public void tabou(){
         tabouList = new LinkedList<>();
         List<Circuit> c1 = allCircuits;
-        System.out.println("Nombre de client : " + allCustomers.size());
+        System.out.println("Nombre de client : "  + allCustomers.size());
         try {
             for (int i = 0; i < nbMaxIteration; ++i) {
                 c1 = tabouMethod(c1, getTotalFitness(c1));
             }
             System.out.println(c1);
             System.out.println(getTotalFitness(c1));
-        } catch (Exception e) {
+        }catch (Exception e){
             e.printStackTrace();
             System.out.println(c1);
             System.out.println(getTotalFitness(c1));
         }
 
         Integer countClient = 0;
-        for (int i = 0; i < c1.size(); ++i) {
+        for(int i = 0; i < c1.size(); ++i){
             countClient += c1.get(i).getCustomers().size() - 2;
         }
         System.out.println("Nombre de client après optimissation : " + countClient);
         optimizedCircuit = c1;
     }
+
 
     public void algoGen(Integer nbInitialIndividu, Integer nbGeneration) throws CloneNotSupportedException {
 
@@ -517,7 +522,7 @@ public class Controller {
 
         //4 fois
         //mutation 
-        //ajout à la pop
+        //ajout Ã  la pop
     }
 
     public Map.Entry<List<Circuit>, Double> initRouting() throws CloneNotSupportedException {
@@ -577,7 +582,7 @@ public class Controller {
         }
 
         System.out.println("Fitness total : " + fitnessTotal);
-        System.out.println("Quantité totale : " + allQuantities);
+        System.out.println("QuantitÃ© totale : " + allQuantities);
 
         return new AbstractMap.SimpleEntry<>(allCircuits, fitnessTotal);
     }

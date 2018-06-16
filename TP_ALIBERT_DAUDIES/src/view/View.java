@@ -2,33 +2,29 @@ package view;
 
 import controller.Controller;
 import javafx.application.Application;
+import javafx.geometry.Insets;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.StrokeType;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import model.Circuit;
-import model.Customer;
-import model.Warehouse;
+import javafx.util.Callback;
+import model.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class View extends Application{
 
     private static Integer multiplicatorValue = 5;
     private static Integer centerValue = 50;
     private static List<Node> addedNodes;
-    private static TextField tabouSize;
-    private static TextField tabouIterationValue;
+    private static Map<Color, Integer> circuitQuantity;
 
     @Override
     public void start(Stage stage) {
@@ -72,45 +68,12 @@ public class View extends Application{
         });
         root.getChildren().add(buttonCircuit);
 
-        Button buttonCompute = new Button("Compute");
+        Button buttonCompute = new Button("Tabou");
         buttonCompute.setLayoutX(375);
         buttonCompute.setOnAction(actionEvent -> {
-            Integer tabouListSize;
-            Integer tabouIteration;
-            try{
-                tabouListSize = Integer.parseInt(tabouSize.getText());
-                tabouIteration = Integer.parseInt(tabouIterationValue.getText());
-            }catch (Exception e){
-                Alert alert = new Alert(Alert.AlertType.WARNING);
-                alert.setTitle("Donnée invalide");
-                alert.setHeaderText("Erreur de parsing");
-                alert.setContentText("La taille de la liste tabou doit être un nombre");
-                alert.showAndWait();
-                return;
-            }
-            controller.setNbMaxIteration(tabouIteration);
-            controller.setTabouListSize(tabouListSize);
-            //controller.searchOptimizedNeighbor();
-            controller.tabou();
-            root.getChildren().removeAll(addedNodes);
-            addedNodes.clear();
-            createAllCircuit(controller.getOptimizedCircuit(), controller.getWarehouse());
-            root.getChildren().addAll(addedNodes);
+            doTabou(controller, root);
         });
         root.getChildren().addAll(buttonCompute);
-        Label tabouList = new Label("Taille liste tabou : ");
-        tabouList.setLayoutX(475);
-        tabouSize = new TextField();
-        tabouSize.setLayoutX(600);
-        tabouSize.setMaxWidth(40);
-        root.getChildren().addAll(tabouSize, tabouList);
-
-        Label tabouIteration = new Label("Itération max tabou : ");
-        tabouIteration.setLayoutX(650);
-        tabouIterationValue = new TextField();
-        tabouIterationValue.setLayoutX(800);
-        tabouIterationValue.setMaxWidth(50);
-        root.getChildren().addAll(tabouIteration, tabouIterationValue);
 
         Scene scene = new Scene(root, 900, 600);
 
@@ -161,9 +124,20 @@ public class View extends Application{
     private static void createAllCircuit(List<Circuit> circuits, Customer warehouse){
         Color color;
         Customer customer;
-
+        Label circuitQuantity;
+        Integer acutalY = 5;
+        Customer fakeCustomer1, fakeCustomer2;
         for(Circuit c : circuits){
             color = Color.color(Math.random(), Math.random(), Math.random());
+            fakeCustomer1 = new Customer(0, 120, acutalY, 0);
+            fakeCustomer2 = new Customer(0, 130, acutalY, 0);
+            createLine(fakeCustomer1, fakeCustomer2, color);
+            circuitQuantity = new Label("Quantité camion : " + c.getQuantity());
+            circuitQuantity.setLayoutX(145 * multiplicatorValue);
+            circuitQuantity.setLayoutY(acutalY * multiplicatorValue + 35);
+            acutalY += 5;
+            addedNodes.add(circuitQuantity);
+
             for(int i = 0; i < c.getCustomers().size() -1; ++i){
                 customer = c.getCustomers().get(i);
                 if(!(customer instanceof Warehouse))
@@ -191,4 +165,145 @@ public class View extends Application{
         line.setEndY(to.getY()*multiplicatorValue + centerValue - 5);
         addedNodes.add(line);
     }
+
+    public void doTabou(Controller c, Group root){
+        Dialog<Tabou> dialog = new Dialog<>();
+        dialog.setTitle("Méthode Tabou");
+        dialog.setHeaderText("Veuillez renseigner les données de l'algorithme Tabou.");
+        dialog.setResizable(true);
+
+        Label label1 = new Label("Taille liste Tabou : ");
+        Label label2 = new Label("Itération max : ");
+        TextField text1 = new TextField("5");
+        TextField text2 = new TextField("500");
+
+        GridPane grid = new GridPane();
+        GridPane.setMargin(grid, new Insets(5, 5, 5, 5));
+        grid.add(label1, 1, 1);
+        grid.add(text1, 2, 1);
+        grid.add(label2, 1, 2);
+        grid.add(text2, 2, 2);
+        dialog.getDialogPane().setContent(grid);
+
+        ButtonType buttonTypeOk = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().add(buttonTypeOk);
+
+        dialog.setResultConverter(new Callback<ButtonType, Tabou>() {
+            @Override
+            public Tabou call(ButtonType b) {
+                Integer tSize;
+                Integer maxIt;
+                if (b == buttonTypeOk) {
+                    try{
+                        tSize = Integer.parseInt(text1.getText());
+                        maxIt = Integer.parseInt(text2.getText());
+                        return new Tabou(tSize, maxIt);
+                    }catch(Exception e){
+                        alertFormat();
+                        return null;
+                    }
+
+                }
+                return null;
+            }
+        });
+
+        Optional<Tabou> result = dialog.showAndWait();
+
+        if (result.isPresent()) {
+            c.setNbMaxIteration(result.get().getMaxIteration());
+            c.setTabouListSize(result.get().getTabouSize());
+            c.tabou();
+            root.getChildren().removeAll(addedNodes);
+            addedNodes.clear();
+            createAllCircuit(c.getOptimizedCircuit(), c.getWarehouse());
+            root.getChildren().addAll(addedNodes);
+        }
+    }
+
+    public void doGen(Controller c, Group root){
+        Dialog<Gen> dialog = new Dialog<>();
+        dialog.setTitle("Méthode Génétique");
+        dialog.setHeaderText("Veuillez renseigner les données de l'algorithme génétique.");
+        dialog.setResizable(true);
+
+        Label label1 = new Label("Taille population : ");
+        Label label2 = new Label("Itération max : ");
+        TextField text1 = new TextField("50");
+        TextField text2 = new TextField("500");
+
+        GridPane grid = new GridPane();
+        GridPane.setMargin(grid, new Insets(5, 5, 5, 5));
+        grid.add(label1, 1, 1);
+        grid.add(text1, 2, 1);
+        grid.add(label2, 1, 2);
+        grid.add(text2, 2, 2);
+        dialog.getDialogPane().setContent(grid);
+
+        ButtonType buttonTypeOk = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().add(buttonTypeOk);
+
+        dialog.setResultConverter(new Callback<ButtonType, Gen>() {
+            @Override
+            public Gen call(ButtonType b) {
+                Integer pop;
+                Integer maxIt;
+                if (b == buttonTypeOk) {
+                    try{
+                        pop = Integer.parseInt(text1.getText());
+                        maxIt = Integer.parseInt(text2.getText());
+                        return new Gen(pop, maxIt);
+                    }catch(Exception e){
+                        alertFormat();
+                        return null;
+                    }
+
+                }
+                return null;
+            }
+        });
+
+        Optional<Gen> result = dialog.showAndWait();
+
+        if (result.isPresent()) {
+            c.tabou();//TODO change with gen
+            root.getChildren().removeAll(addedNodes);
+            addedNodes.clear();
+            createAllCircuit(c.getOptimizedCircuit(), c.getWarehouse());
+            root.getChildren().addAll(addedNodes);
+        }
+    }
+
+    public void alertFormat(){
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("Donnée invalide");
+        alert.setHeaderText("Erreur de parsing");
+        alert.setContentText("Les données attendues sont des nombres");
+        alert.showAndWait();
+    }
+
+    /*
+    *
+    * Integer tabouListSize;
+            Integer tabouIteration;
+            try{
+                tabouListSize = Integer.parseInt(tabouSize.getText());
+                tabouIteration = Integer.parseInt(tabouIterationValue.getText());
+            }catch (Exception e){
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Donnée invalide");
+                alert.setHeaderText("Erreur de parsing");
+                alert.setContentText("La taille de la liste tabou doit être un nombre");
+                alert.showAndWait();
+                return;
+            }
+            controller.setNbMaxIteration(tabouIteration);
+            controller.setTabouListSize(tabouListSize);
+            //controller.searchOptimizedNeighbor();
+            controller.tabou();
+            root.getChildren().removeAll(addedNodes);
+            addedNodes.clear();
+            createAllCircuit(controller.getOptimizedCircuit(), controller.getWarehouse());
+            root.getChildren().addAll(addedNodes);
+    * */
 }   

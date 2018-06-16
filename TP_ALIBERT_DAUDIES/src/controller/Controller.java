@@ -21,56 +21,9 @@ public class Controller {
     private Map<List<Circuit>, Double> allNeighbor;
     private Integer tabouListSize;
     private Integer nbMaxIteration;
+    private String fileName;
 
     public Controller(){}
-
-    private void run() {
-        try {
-            initValue("./data01.txt");
-            initCircuit();
-            searchOptimizedNeighbor();
-
-
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-    }
-
-    private List<Circuit> getOptimizedNeighbor(List<Circuit> circuits, Double fitness) throws Exception{
-        List<Circuit> cloneCircuit;
-        List<Circuit> optimizedNeighbor = null;
-        Double optimizedFitness = null;
-        Circuit circuit;
-        Double calculatedFitness;
-        Integer customerIndex;
-        for(int i = 0; i < circuits.size(); ++i){
-            circuit = circuits.get(i);
-            for(Customer customer : circuit.getCustomers()){
-                if(customer instanceof Warehouse){
-                    continue;
-                }
-                cloneCircuit = cloneList(circuits);
-                customerIndex = cloneCircuit.get(i).getCustomers().indexOf(customer);
-                cloneCircuit.get(i).removeCustomer(customer);
-                for(Circuit clonedCircuit : cloneCircuit){
-                    for(int j = 1; j < clonedCircuit.getCustomers().size(); ++j){
-                        if(clonedCircuit.getQuantity() + customer.getQuantities() <= 100) {
-                            clonedCircuit.addCustomerAt(customer, j);
-                            calculatedFitness = getTotalFitness(cloneCircuit);
-                            if (optimizedFitness == null || optimizedFitness > calculatedFitness) {
-                                optimizedFitness = calculatedFitness;
-                                optimizedNeighbor = cloneCircuit;
-                            }
-                            clonedCircuit.removeCustomer(customer);
-                        }
-                    }
-                }
-                cloneCircuit.get(i).addCustomerAt(customer, customerIndex);
-            }
-        }
-        if(fitness.equals(optimizedFitness)) throw new Exception("Valeur optimisée");
-        return optimizedNeighbor;
-    }
 
     private List<Circuit> tabouMethod(List<Circuit> circuits, Double fitness) throws Exception{
         allNeighbor = new HashMap<>();
@@ -142,7 +95,9 @@ public class Controller {
 
     public void initValue(String fileName){
         try{
+            this.fileName = fileName;
             allCustomers = new ArrayList<>();
+            optimizedCircuit = new ArrayList<>();
             File f = new File(fileName);
             InputStreamReader isr = new InputStreamReader(new FileInputStream(f));
             BufferedReader reader = new BufferedReader(isr);
@@ -173,6 +128,7 @@ public class Controller {
     }
 
     public void initCircuit(){
+        initValue(fileName);
         allCircuits = new ArrayList<>();
         Circuit circuit;
         LinkedList<Customer> customers;
@@ -241,32 +197,15 @@ public class Controller {
         System.out.println("Quantité totale : " + allQuantities);
     }
 
-    public void searchOptimizedNeighbor(){
-        List<Circuit> c1 = allCircuits;
-        System.out.println("Nombre de client : "  + allCustomers.size());
-        try {
-            for (int i = 0; i < 50; ++i) {
-                c1 = getOptimizedNeighbor(c1, getTotalFitness(c1));
-            }
-            System.out.println(c1);
-            System.out.println(getTotalFitness(c1));
-        }catch (Exception e){
-            System.out.println(c1);
-            System.out.println(getTotalFitness(c1));
-        }
-
-        Integer countClient = 0;
-        for(int i = 0; i < c1.size(); ++i){
-            countClient += c1.get(i).getCustomers().size() - 2;
-        }
-        System.out.println("Nombre de client après optimissation : " + countClient);
-        optimizedCircuit = c1;
-    }
-
     public void tabou(){
         tabouList = new LinkedList<>();
         List<Circuit> c1 = allCircuits;
-        System.out.println("Nombre de client : "  + allCustomers.size());
+        Integer countClient = 0;
+        for(int i = 0; i < c1.size(); ++i){
+            countClient += c1.get(i).getCustomers().size() - 1;
+        }
+        System.out.println("Nombre de client : "  + countClient);
+
         try {
             for (int i = 0; i < nbMaxIteration; ++i) {
                 c1 = tabouMethod(c1, getTotalFitness(c1));
@@ -279,17 +218,12 @@ public class Controller {
             System.out.println(getTotalFitness(c1));
         }
 
-        Integer countClient = 0;
+        countClient = 0;
         for(int i = 0; i < c1.size(); ++i){
-            countClient += c1.get(i).getCustomers().size() - 2;
+            countClient += c1.get(i).getCustomers().size() - 1;
         }
         System.out.println("Nombre de client après optimissation : " + countClient);
         optimizedCircuit = c1;
-    }
-
-    public static void main(String[] args) {
-        Controller controller = new Controller();
-        controller.run();
     }
 
     public List<Circuit> getAllCircuits() {

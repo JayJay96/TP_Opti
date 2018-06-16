@@ -3,6 +3,7 @@ package model;
 import java.util.LinkedList;
 
 public class Circuit implements Cloneable{
+    private int id;
     private LinkedList<Customer> customers;
     private Integer quantity;
     private Double fitness;
@@ -26,6 +27,14 @@ public class Circuit implements Cloneable{
         this.quantity = 0;
         for(Customer c : customers)
             this.quantity += c.getQuantities();
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public LinkedList<Customer> getCustomers() {

@@ -21,6 +21,7 @@ import model.Warehouse;
 
 import java.util.ArrayList;
 import java.util.List;
+import javafx.scene.layout.BorderPane;
 
 public class View extends Application{
 
@@ -34,6 +35,8 @@ public class View extends Application{
     public void start(Stage stage) {
         Controller controller = new Controller();
         addedNodes = new ArrayList<>();
+        BorderPane borderpane = new BorderPane();
+        
         Group root = new Group();
 
         Button buttonData1 = new Button("data01");

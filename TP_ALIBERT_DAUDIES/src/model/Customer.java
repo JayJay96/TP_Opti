@@ -7,6 +7,8 @@ public class Customer implements Cloneable{
     private Integer y;
 
     private Integer quantities;
+    
+    private Integer listPosition;
 
     public Customer(Integer id, Integer x, Integer y, Integer quantities) {
         this.id = id;
@@ -29,6 +31,14 @@ public class Customer implements Cloneable{
 
     public Integer getQuantities() {
         return quantities;
+    }
+
+    public Integer getListPosition() {
+        return listPosition;
+    }
+
+    public void setListPosition(Integer listPosition) {
+        this.listPosition = listPosition;
     }
 
     public Double getEuclidianDistance(Customer c){

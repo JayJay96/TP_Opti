@@ -2,25 +2,27 @@ package view;
 
 import controller.Controller;
 import javafx.application.Application;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.geometry.Insets;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.StrokeType;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import model.Circuit;
-import model.Customer;
-import model.Warehouse;
+import javafx.util.Callback;
+import model.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
 import javafx.scene.layout.BorderPane;
 
 public class View extends Application{
@@ -28,8 +30,6 @@ public class View extends Application{
     private static Integer multiplicatorValue = 5;
     private static Integer centerValue = 50;
     private static List<Node> addedNodes;
-    private static TextField tabouSize;
-    private static TextField tabouIterationValue;
 
     @Override
     public void start(Stage stage) {
@@ -39,81 +39,93 @@ public class View extends Application{
         
         Group root = new Group();
 
-        Button buttonData1 = new Button("data01");
-        buttonData1.setOnAction(actionEvent -> {
-            initData(controller, root, "./data01.txt");
-        });
-        root.getChildren().add(buttonData1);
-        Button buttonData2 = new Button("data02");
-        buttonData2.setOnAction(actionEvent -> {
-            initData(controller, root, "./data02.txt");
-        });
-        buttonData2.setLayoutX(70);
-        root.getChildren().add(buttonData2);
-        Button buttonData3 = new Button("data03");
-        buttonData3.setOnAction(actionEvent -> {
-            initData(controller, root, "./data03.txt");
-        });
-        buttonData3.setLayoutX(140);
-        root.getChildren().add(buttonData3);
-        Button buttonData4 = new Button("data04");
-        buttonData4.setOnAction(actionEvent -> {
-            initData(controller, root, "./data04.txt");
-        });
-        buttonData4.setLayoutX(210);
-        root.getChildren().add(buttonData4);
-        //Creating a Scene
+        MenuBar menuBar = new MenuBar();
 
-        Button buttonCircuit = new Button("Init Circuit");
-        buttonCircuit.setLayoutX(280);
-        buttonCircuit.setOnAction(actionEvent -> {
-            controller.initCircuit();
-            root.getChildren().removeAll(addedNodes);
-            addedNodes.clear();
-            createAllCircuit(controller.getAllCircuits(), controller.getWarehouse());
-            root.getChildren().addAll(addedNodes);
-        });
-        root.getChildren().add(buttonCircuit);
-
-        Button buttonCompute = new Button("Compute");
-        buttonCompute.setLayoutX(375);
-        buttonCompute.setOnAction(actionEvent -> {
-            Integer tabouListSize;
-            Integer tabouIteration;
-            try{
-                tabouListSize = Integer.parseInt(tabouSize.getText());
-                tabouIteration = Integer.parseInt(tabouIterationValue.getText());
-            }catch (Exception e){
-                Alert alert = new Alert(Alert.AlertType.WARNING);
-                alert.setTitle("Donnée invalide");
-                alert.setHeaderText("Erreur de parsing");
-                alert.setContentText("La taille de la liste tabou doit être un nombre");
-                alert.showAndWait();
-                return;
+        // --- Menu File
+        Menu menuFile = new Menu("Données");
+        MenuItem data1 = new MenuItem("Data01");
+        data1.setOnAction(new EventHandler<ActionEvent>() {
+            public void handle(ActionEvent t) {
+                initData(controller, root, "./data01.txt");
             }
-            controller.setNbMaxIteration(tabouIteration);
-            controller.setTabouListSize(tabouListSize);
-            //controller.searchOptimizedNeighbor();
-            controller.tabou();
-            root.getChildren().removeAll(addedNodes);
-            addedNodes.clear();
-            createAllCircuit(controller.getOptimizedCircuit(), controller.getWarehouse());
-            root.getChildren().addAll(addedNodes);
         });
-        root.getChildren().addAll(buttonCompute);
-        Label tabouList = new Label("Taille liste tabou : ");
-        tabouList.setLayoutX(475);
-        tabouSize = new TextField();
-        tabouSize.setLayoutX(600);
-        tabouSize.setMaxWidth(40);
-        root.getChildren().addAll(tabouSize, tabouList);
 
-        Label tabouIteration = new Label("Itération max tabou : ");
-        tabouIteration.setLayoutX(650);
-        tabouIterationValue = new TextField();
-        tabouIterationValue.setLayoutX(800);
-        tabouIterationValue.setMaxWidth(50);
-        root.getChildren().addAll(tabouIteration, tabouIterationValue);
+        MenuItem data2 = new MenuItem("Data02");
+        data2.setOnAction(new EventHandler<ActionEvent>() {
+            public void handle(ActionEvent t) {
+                initData(controller, root, "./data02.txt");
+            }
+        });
+
+        MenuItem data3 = new MenuItem("Data03");
+        data3.setOnAction(new EventHandler<ActionEvent>() {
+            public void handle(ActionEvent t) {
+                initData(controller, root, "./data03.txt");
+            }
+        });
+
+        MenuItem data4 = new MenuItem("Data04");
+        data4.setOnAction(new EventHandler<ActionEvent>() {
+            public void handle(ActionEvent t) {
+                initData(controller, root, "./data04.txt");
+            }
+        });
+
+        menuFile.getItems().addAll(data1, data2, data3, data4);
+
+        // --- Menu Edit
+        Menu menuAlgo = new Menu("Algorithme");
+
+        MenuItem circuit = new MenuItem("Init circuit");
+        circuit.setOnAction(new EventHandler<ActionEvent>() {
+            public void handle(ActionEvent t) {
+                if(controller.getAllCustomers() == null || controller.getAllCustomers().size() == 0){
+                    Alert alert = warningAlert("Problème dans l'algorithme",
+                            "Donnée non générées",
+                            "Merci de sélectionner des données dans le menu 'Données'");
+                    alert.showAndWait();
+                }
+                else {
+                    controller.initCircuit();
+                    root.getChildren().removeAll(addedNodes);
+                    addedNodes.clear();
+                    createAllCircuit(controller.getAllCircuits(), controller.getWarehouse(), controller.getInitialFitness(), controller.getOptimizedFitness());
+                    root.getChildren().addAll(addedNodes);
+                }
+            }
+        });
+
+        MenuItem tabou = new MenuItem("Tabou");
+        tabou.setOnAction(new EventHandler<ActionEvent>() {
+            public void handle(ActionEvent t) {
+                if(controller.getAllCircuits() == null || controller.getAllCircuits().size() == 0){
+                    Alert alert = warningAlert("Problème dans l'algorithme",
+                            "Circuit non générées",
+                            "Merci de générer les circuit dans le menu 'Algorithme'");
+                    alert.showAndWait();
+                }
+                else
+                    doTabou(controller, root);
+            }
+        });
+
+        MenuItem gen = new MenuItem("Algo génétique");
+        gen.setOnAction(new EventHandler<ActionEvent>() {
+            public void handle(ActionEvent t) {
+                if(controller.getAllCustomers() == null || controller.getAllCustomers().size() == 0){
+                    Alert alert = warningAlert("Problème dans l'algorithme",
+                            "Donnée non générées",
+                            "Merci de sélectionner des données dans le menu 'Données'");
+                    alert.showAndWait();
+                }
+                else
+                    doGen(controller, root);
+            }
+        });
+        menuAlgo.getItems().addAll(circuit, tabou, gen);
+
+        menuBar.getMenus().addAll(menuFile, menuAlgo);
+        root.getChildren().add(menuBar);
 
         Scene scene = new Scene(root, 900, 600);
 
@@ -161,12 +173,22 @@ public class View extends Application{
         addedNodes.add(text);
     }
 
-    private static void createAllCircuit(List<Circuit> circuits, Customer warehouse){
+    private static void createAllCircuit(List<Circuit> circuits, Customer warehouse, Double inilFitness, Double optiFitness){
         Color color;
         Customer customer;
-
+        Label circuitQuantity;
+        Integer acutalY = 5;
+        Customer fakeCustomer1, fakeCustomer2;
         for(Circuit c : circuits){
             color = Color.color(Math.random(), Math.random(), Math.random());
+            fakeCustomer1 = new Customer(0, 120, acutalY, 0);
+            fakeCustomer2 = new Customer(0, 130, acutalY, 0);
+            createLine(fakeCustomer1, fakeCustomer2, color);
+            circuitQuantity = new Label("Quantité camion : " + c.getQuantity());
+            circuitQuantity.setLayoutX(145 * multiplicatorValue);
+            circuitQuantity.setLayoutY(acutalY * multiplicatorValue + 35);
+            acutalY += 5;
+            addedNodes.add(circuitQuantity);
             for(int i = 0; i < c.getCustomers().size() -1; ++i){
                 customer = c.getCustomers().get(i);
                 if(!(customer instanceof Warehouse))
@@ -180,6 +202,16 @@ public class View extends Application{
 
         }
         createCustomer(warehouse, "Entrepôt", Color.RED);
+        Label initialFitness = new Label("Fitness initiale : " + String.format("%5.2f" , inilFitness));
+        Label optimizedFitness = new Label("Fitness optimisée : " + (optiFitness == null? "" : String.format("%5.2f" , optiFitness)));
+        acutalY += 10;
+        initialFitness.setLayoutX(120 * multiplicatorValue);
+        initialFitness.setLayoutY(acutalY * multiplicatorValue + 35);
+        acutalY += 5;
+        optimizedFitness.setLayoutX(120 * multiplicatorValue);
+        optimizedFitness.setLayoutY(acutalY * multiplicatorValue + 35);
+        addedNodes.add(initialFitness);
+        addedNodes.add(optimizedFitness);
     }
 
     private static void createLine(Customer from, Customer to, Color color){
@@ -193,5 +225,133 @@ public class View extends Application{
         line.setEndX(to.getX()*multiplicatorValue + centerValue + 5);
         line.setEndY(to.getY()*multiplicatorValue + centerValue - 5);
         addedNodes.add(line);
+    }
+
+    public void doTabou(Controller c, Group root){
+        Dialog<Tabou> dialog = new Dialog<>();
+        dialog.setTitle("Méthode Tabou");
+        dialog.setHeaderText("Veuillez renseigner les données de l'algorithme Tabou.");
+        dialog.setResizable(true);
+
+        Label label1 = new Label("Taille liste Tabou : ");
+        Label label2 = new Label("Itération max : ");
+        TextField text1 = new TextField("5");
+        TextField text2 = new TextField("500");
+
+        GridPane grid = new GridPane();
+        GridPane.setMargin(grid, new Insets(5, 5, 5, 5));
+        grid.add(label1, 1, 1);
+        grid.add(text1, 2, 1);
+        grid.add(label2, 1, 2);
+        grid.add(text2, 2, 2);
+        dialog.getDialogPane().setContent(grid);
+
+        ButtonType buttonTypeOk = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().add(buttonTypeOk);
+
+        dialog.setResultConverter(new Callback<ButtonType, Tabou>() {
+            @Override
+            public Tabou call(ButtonType b) {
+                Integer tSize;
+                Integer maxIt;
+                if (b == buttonTypeOk) {
+                    try{
+                        tSize = Integer.parseInt(text1.getText());
+                        maxIt = Integer.parseInt(text2.getText());
+                        return new Tabou(tSize, maxIt);
+                    }catch(Exception e){
+                        alertFormat();
+                        return null;
+                    }
+
+                }
+                return null;
+            }
+        });
+
+        Optional<Tabou> result = dialog.showAndWait();
+
+        if (result.isPresent()) {
+            c.setNbMaxIteration(result.get().getMaxIteration());
+            c.setTabouListSize(result.get().getTabouSize());
+            c.tabou();
+            root.getChildren().removeAll(addedNodes);
+            addedNodes.clear();
+            createAllCircuit(c.getOptimizedCircuit(), c.getWarehouse(), c.getInitialFitness(), c.getOptimizedFitness());
+            root.getChildren().addAll(addedNodes);
+        }
+    }
+
+    public void doGen(Controller c, Group root){
+        Dialog<Gen> dialog = new Dialog<>();
+        dialog.setTitle("Méthode Génétique");
+        dialog.setHeaderText("Veuillez renseigner les données de l'algorithme génétique.");
+        dialog.setResizable(true);
+
+        Label label1 = new Label("Taille population : ");
+        Label label2 = new Label("Itération max : ");
+        TextField text1 = new TextField("50");
+        TextField text2 = new TextField("500");
+
+        GridPane grid = new GridPane();
+        GridPane.setMargin(grid, new Insets(5, 5, 5, 5));
+        grid.add(label1, 1, 1);
+        grid.add(text1, 2, 1);
+        grid.add(label2, 1, 2);
+        grid.add(text2, 2, 2);
+        dialog.getDialogPane().setContent(grid);
+
+        ButtonType buttonTypeOk = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().add(buttonTypeOk);
+
+        dialog.setResultConverter(new Callback<ButtonType, Gen>() {
+            @Override
+            public Gen call(ButtonType b) {
+                Integer pop;
+                Integer maxIt;
+                if (b == buttonTypeOk) {
+                    try{
+                        pop = Integer.parseInt(text1.getText());
+                        maxIt = Integer.parseInt(text2.getText());
+                        return new Gen(pop, maxIt);
+                    }catch(Exception e){
+                        alertFormat();
+                        return null;
+                    }
+
+                }
+                return null;
+            }
+        });
+
+        Optional<Gen> result = dialog.showAndWait();
+
+        if (result.isPresent()) {
+            try {
+                c.algoGen(result.get().getNbPopulation(), result.get().getNbIteration());//TODO change with gen
+                root.getChildren().removeAll(addedNodes);
+                addedNodes.clear();
+                createAllCircuit(c.getOptimizedCircuit(), c.getWarehouse(), c.getInitialFitness(), c.getOptimizedFitness());
+                root.getChildren().addAll(addedNodes);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void alertFormat(){
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("Donnée invalide");
+        alert.setHeaderText("Erreur de parsing");
+        alert.setContentText("Les données attendues sont des nombres");
+        alert.showAndWait();
+    }
+
+    public Alert warningAlert(String title, String headerText, String contentText){
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle(title);
+        alert.setHeaderText(headerText);
+        alert.setContentText(contentText);
+        return alert;
     }
 }   

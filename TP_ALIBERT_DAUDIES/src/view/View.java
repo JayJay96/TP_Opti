@@ -5,10 +5,12 @@ import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.scene.Cursor;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -30,16 +32,19 @@ public class View extends Application{
     private static Integer multiplicatorValue = 5;
     private static Integer centerValue = 50;
     private static List<Node> addedNodes;
+    private static Scene scene;
 
     @Override
     public void start(Stage stage) {
         Controller controller = new Controller();
+        Group root = new Group();
+        scene = new Scene(root, 900, 600);
+        stage.getIcons().add(new Image("file:logo.png"));
         addedNodes = new ArrayList<>();
         BorderPane borderpane = new BorderPane();
-        
-        Group root = new Group();
 
         MenuBar menuBar = new MenuBar();
+        menuBar.prefWidthProperty().bind(stage.widthProperty());
 
         // --- Menu File
         Menu menuFile = new Menu("Données");
@@ -71,7 +76,14 @@ public class View extends Application{
             }
         });
 
-        menuFile.getItems().addAll(data1, data2, data3, data4);
+        MenuItem data5 = new MenuItem("Data05");
+        data5.setOnAction(new EventHandler<ActionEvent>() {
+            public void handle(ActionEvent t) {
+                initData(controller, root, "./data05.txt");
+            }
+        });
+
+        menuFile.getItems().addAll(data1, data2, data3, data4, data5);
 
         // --- Menu Edit
         Menu menuAlgo = new Menu("Algorithme");
@@ -126,8 +138,6 @@ public class View extends Application{
 
         menuBar.getMenus().addAll(menuFile, menuAlgo);
         root.getChildren().add(menuBar);
-
-        Scene scene = new Scene(root, 900, 600);
 
         //Setting title to the scene
         stage.setTitle("Livraison");
@@ -272,6 +282,7 @@ public class View extends Application{
         Optional<Tabou> result = dialog.showAndWait();
 
         if (result.isPresent()) {
+            scene.setCursor(Cursor.WAIT);
             c.setNbMaxIteration(result.get().getMaxIteration());
             c.setTabouListSize(result.get().getTabouSize());
             c.tabou();
@@ -279,6 +290,7 @@ public class View extends Application{
             addedNodes.clear();
             createAllCircuit(c.getOptimizedCircuit(), c.getWarehouse(), c.getInitialFitness(), c.getOptimizedFitness());
             root.getChildren().addAll(addedNodes);
+            scene.setCursor(Cursor.DEFAULT);
         }
     }
 
@@ -328,11 +340,13 @@ public class View extends Application{
 
         if (result.isPresent()) {
             try {
+                scene.setCursor(Cursor.WAIT);
                 c.algoGen(result.get().getNbPopulation(), result.get().getNbIteration());//TODO change with gen
                 root.getChildren().removeAll(addedNodes);
                 addedNodes.clear();
                 createAllCircuit(c.getOptimizedCircuit(), c.getWarehouse(), c.getInitialFitness(), c.getOptimizedFitness());
                 root.getChildren().addAll(addedNodes);
+                scene.setCursor(Cursor.DEFAULT);
             }catch (Exception e){
                 e.printStackTrace();
             }

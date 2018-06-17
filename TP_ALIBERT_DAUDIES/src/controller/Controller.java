@@ -69,7 +69,7 @@ public class Controller {
             min = Collections.min(allNeighbor.entrySet(), Comparator.comparing(Map.Entry::getValue));
         }
 
-        if (min.getValue() > fitness) {
+        if (min.getValue() >= fitness) {
             if (tabouList.size() == tabouListSize) {
                 tabouList.removeLast();
             }
@@ -189,7 +189,6 @@ public class Controller {
             circuitDistance = c.computeFitness();
             c.setFitness(circuitDistance);
             fitnessTotal += circuitDistance;
-            System.out.println(c.getQuantity() + " " + c);
         }
         initialFitness = getTotalFitness(allCircuits);
     }
@@ -201,12 +200,8 @@ public class Controller {
             for (int i = 0; i < nbMaxIteration; ++i) {
                 c1 = tabouMethod(c1, getTotalFitness(c1));
             }
-            System.out.println(c1);
-            System.out.println(getTotalFitness(c1));
         }catch (Exception e){
             e.printStackTrace();
-            System.out.println(c1);
-            System.out.println(getTotalFitness(c1));
         }
 
         optimizedCircuit = c1;
@@ -225,12 +220,10 @@ public class Controller {
             Map.Entry<List<Circuit>, Double> entry = initRouting();
             initialPopulationAndFitness.put(entry.getKey(), entry.getValue());
         }
-        int i = 1;
+
         for (Map.Entry<List<Circuit>, Double> entry : initialPopulationAndFitness.entrySet()) {
             List<Circuit> key = entry.getKey();
             Double value = entry.getValue();
-
-            System.out.println("Indiv " + i + "fitness" + entry.getValue());
 
             codagePopInit.put(key, new TreeMap<>());
             for (Circuit circuit : key) {
@@ -241,17 +234,12 @@ public class Controller {
 
                 }
             }
-
-            for (Map.Entry<Integer, Integer> entry2 : codagePopInit.get(key).entrySet()) {
-                System.out.println(entry2.getKey() + " ---> " + entry2.getValue());
-            }
-            i++;
         }
+
         for (int b = 0; b < nbGeneration; b++) {
-            System.out.println("generation : " + b);
             //selection
             selection = initialPopulationAndFitness.entrySet().stream()
-                    .sorted((o1, o2) -> o1.getValue().compareTo(o2.getValue()))
+                    .sorted(Comparator.comparing(Map.Entry::getValue))
                     .limit(nbInitialIndividu / 2)
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
@@ -264,14 +252,7 @@ public class Controller {
             for (List<Circuit> list : toRemove) {
                 codagePopInit.remove(list);
             }
-            System.out.println("Selection");
-            for (Map.Entry<List<Circuit>, Map<Integer, Integer>> entry2 : codagePopInit.entrySet()) {
-                System.out.println("indiv fitness : " + selection.get(entry2.getKey()));
-                for (Map.Entry<Integer, Integer> entry3 : entry2.getValue().entrySet()) {
-                    System.out.println(entry3.getKey() + " ---> " + entry3.getValue());
 
-                }
-            }
             Map<List<Circuit>, Double> children = new HashMap<>();
             for (int a = 0; a < nbInitialIndividu / 2; a++) {
 
@@ -295,33 +276,30 @@ public class Controller {
 
                 Map<Integer, Integer> codageFils1 = new TreeMap<>();
 
-                codageFils1.putAll(codageT1.entrySet().stream()
+                Map<Integer, Integer> tmp1 = codageT1.entrySet().stream()
                         .limit(section)
-                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
-
-                codageFils1.putAll(codageT2.entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                Map<Integer, Integer> tmp2 = codageT2.entrySet().stream()
                         .skip(section)
-                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+                codageFils1.putAll(tmp1);
+                codageFils1.putAll(tmp2);
 
                 List<Circuit> newCircuits = new ArrayList<>();
 
-                List<Customer> sortedCustormers = allCustomers.stream().sorted((o1, o2) -> {
-                    return o1.getId().compareTo(o2.getId());
-                }).collect(Collectors.toList());
+                List<Customer> sortedCustormers = allCustomers.stream().sorted(Comparator.comparing(Customer::getId)).collect(Collectors.toList());
 
-                int circuitQte = 0;
+                Integer circuitQte;
                 LinkedList<Customer> excludedCustomers = new LinkedList<>();
                 Integer nbTrucks = codageFils1.values().stream().max(Integer::compareTo).get();
-                Integer customerPos;
-                for (int j = 0; j < nbTrucks ; j++) {
+                for (int j = 1; j <= nbTrucks ; j++) {
+                    circuitQte = 0;
                     LinkedList<Customer> circuitCustomers = new LinkedList<>();
                     circuitCustomers.add(warehouse);
                     for (Customer c : sortedCustormers) {
+                        //Keep the same place in the circuit
                         c.setListPosition(findCusotmerInList(selectedTournee1, selectedTournee2, c, section));
-                        
-                        if(codageFils1 == null || c == null || codageFils1.get(c.getId()) == null){
-                            System.out.println("null");
-                        }
                         if (codageFils1.get(c.getId()) == j) {
                             Customer cCopy = c.clone();
                             if (circuitQte + c.getQuantities() <= 100) {
@@ -338,6 +316,7 @@ public class Controller {
                                 else {
                                     circuitCustomers.add(c.getListPosition(), cCopy);
                                 }
+                                circuitQte += c.getQuantities();
                             } else {
                                 excludedCustomers.add(cCopy);
                             }
@@ -382,11 +361,6 @@ public class Controller {
                     circuitDistance = c.computeFitness();
                     c.setFitness(circuitDistance);
                     fitnessTotal += circuitDistance;
-                    System.out.println(c.getQuantity() + " " + c);
-                }
-                System.out.println("indiv fitness : " + fitnessTotal);
-                for (Map.Entry<Integer, Integer> entry4 : codageFils1.entrySet()) {
-                    System.out.println(entry4.getKey() + " ---> " + entry4.getValue());
                 }
 
                 children.put(newCircuits, fitnessTotal);
@@ -401,8 +375,6 @@ public class Controller {
                 List<Circuit> key = entry.getKey();
                 Double value = entry.getValue();
 
-                System.out.println("Indiv " + i + "fitness" + entry.getValue());
-
                 codagePopInit.put(key, new TreeMap<>());
                 for (Circuit circuit : key) {
                     for (Customer customer : circuit.getCustomers()) {
@@ -412,23 +384,17 @@ public class Controller {
 
                     }
                 }
-
-                if(codagePopInit.get(key).size() < allCustomers.size() - 1){
-                    System.out.println(codagePopInit.get(key).size());
-                }
-                for (Map.Entry<Integer, Integer> entry2 : codagePopInit.get(key).entrySet()) {
-                    System.out.println(entry2.getKey() + " ---> " + entry2.getValue());
-                }
-                i++;
             }
 
         }
         Map.Entry<List<Circuit>, Double> min;
         min = Collections.min(initialPopulationAndFitness.entrySet(), Comparator.comparing(Map.Entry::getValue));
         optimizedCircuit = min.getKey();
+        optimizedFitness = getTotalFitness(optimizedCircuit);
     }
 
     public Map.Entry<List<Circuit>, Double> initRouting() throws CloneNotSupportedException {
+        initValue(fileName);
         ArrayList<Circuit> allCircuits = new ArrayList<Circuit>();
         optimizedFitness = null;
         Circuit circuit;
@@ -442,7 +408,7 @@ public class Controller {
             customers = new LinkedList<>();
             index = r.nextInt(allCustomers.size());
             customer = allCustomers.get(index);
-            //allCustomers.remove(customer.clone());
+            allCustomers.remove(customer);
             customers.add(warehouse);
             customers.add(customer);
             circuit = new Circuit(customers);
@@ -466,6 +432,7 @@ public class Controller {
             }
             if (selectedCircuit == null) {
                 Circuit newCircuit = new Circuit(new LinkedList<>());
+                newCircuit.addCustomer(warehouse);
                 newCircuit.addCustomer(cClonnned);
                 newCircuit.setId(allCircuits.size() + 1);
                 allCircuits.add(newCircuit);
@@ -482,9 +449,9 @@ public class Controller {
             circuitDistance = c.computeFitness();
             c.setFitness(circuitDistance);
             fitnessTotal += circuitDistance;
-            System.out.println(c.getQuantity() + " " + c);
         }
         initialFitness = getTotalFitness(allCircuits);
+        initValue(fileName);
 
         return new AbstractMap.SimpleEntry<>(allCircuits, fitnessTotal);
     }
